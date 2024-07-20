@@ -16,7 +16,7 @@ dependencyResolutionManagement {
     maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")
   }
 }
-rootProject.name = "chatgpt-android"
+rootProject.name = "XY-MST-Doctors"
 include(":app")
 include(":core-model")
 include(":core-network")
