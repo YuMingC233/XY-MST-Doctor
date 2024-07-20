@@ -82,7 +82,7 @@ class ChatGPTMessagesViewModel @Inject constructor(
     }
   }
 
-  fun sendMessage(text: String, messagesItems: List<MessageListItemState>) {
+  fun sendMessage(text: String, image_locations: Array<String?>, messagesItems: List<MessageListItemState>) {
     messageItemSet.value += text
     viewModelScope.launch {
       val lastGptMessage = messagesItems
@@ -90,7 +90,7 @@ class ChatGPTMessagesViewModel @Inject constructor(
         .filter { it.message.extraData[MESSAGE_EXTRA_CHAT_GPT] == true }
         .maxByOrNull { it.message.createdAt?.time ?: 0 }
         ?.message
-      val workRequest = buildGPTMessageWorkerRequest(text, lastGptMessage)
+      val workRequest = buildGPTMessageWorkerRequest(text, image_locations, lastGptMessage)
       workManager.enqueue(workRequest)
 
       val workInfo = workManager.getWorkInfoByIdLiveData(workRequest.id)
@@ -124,6 +124,7 @@ class ChatGPTMessagesViewModel @Inject constructor(
 
   private fun buildGPTMessageWorkerRequest(
     text: String,
+    image_locations: Array<String?>,
     lastMessage: Message?
   ): OneTimeWorkRequest {
     val constraints = Constraints.Builder()
@@ -132,13 +133,16 @@ class ChatGPTMessagesViewModel @Inject constructor(
 
     val data = Data.Builder()
       .putString(ChatGPTMessageWorker.DATA_TEXT, text)
+      .putStringArray(ChatGPTMessageWorker.DATA_IMAGES, image_locations)
       .putString(ChatGPTMessageWorker.DATA_CHANNEL_ID, channelId)
       .putString(ChatGPTMessageWorker.DATA_LAST_MESSAGE, lastMessage?.text.orEmpty())
       .build()
 
-    return OneTimeWorkRequest.Builder(ChatGPTMessageWorker::class.java)
-      .setConstraints(constraints)
-      .setInputData(data)
-      .build()
+    return data.let {
+      OneTimeWorkRequest.Builder(ChatGPTMessageWorker::class.java)
+        .setConstraints(constraints)
+        .setInputData(it)
+        .build()
+    }
   }
 }

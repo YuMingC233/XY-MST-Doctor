@@ -46,6 +46,7 @@ dependencies {
   implementation(libs.hilt.worker)
 
   implementation(libs.balloon.compose)
+  implementation(libs.hutool.all)
 }
 
 secrets {

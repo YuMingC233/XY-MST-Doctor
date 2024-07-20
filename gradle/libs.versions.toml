@@ -1,4 +1,7 @@
 [versions]
+hutoolAll = "5.8.28"
+hutoolJson = "5.8.27"
+kotlinStdlib = "2.0.0"
 streamChatSDK = "6.1.1"
 streamLog = "1.1.4"
 balloon = "1.6.4"
@@ -43,6 +46,9 @@ snitcher = "1.0.3"
 firebaseBom = "32.1.1"
 
 [libraries]
+hutool-all = { module = "cn.hutool:hutool-all", version.ref = "hutoolAll" }
+hutool-json = { module = "cn.hutool:hutool-json", version.ref = "hutoolJson" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinStdlib" }
 stream-client = { group = "io.getstream", name = "stream-chat-android-client", version.ref = "streamChatSDK" }
 stream-offline = { group = "io.getstream", name = "stream-chat-android-offline", version.ref = "streamChatSDK" }
 stream-compose = { group = "io.getstream", name = "stream-chat-android-compose", version.ref = "streamChatSDK" }

@@ -21,8 +21,11 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
+import cn.hutool.json.JSONUtil
 import com.skydoves.chatgpt.core.data.repository.GPTMessageRepository
+import com.skydoves.chatgpt.core.model.Content
 import com.skydoves.chatgpt.core.model.GPTMessage
+import com.skydoves.chatgpt.core.model.ImageUrl
 import com.skydoves.chatgpt.core.model.network.GPTChatRequest
 import com.skydoves.chatgpt.feature.chat.di.ChatEntryPoint
 import com.skydoves.sandwich.getOrThrow
@@ -33,6 +36,7 @@ import dagger.assisted.AssistedInject
 import io.getstream.chat.android.client.ChatClient
 import io.getstream.chat.android.models.Message
 import io.getstream.log.streamLog
+import java.io.File
 import javax.inject.Inject
 
 @HiltWorker
@@ -53,22 +57,63 @@ internal class ChatGPTMessageWorker @AssistedInject constructor(
     val text = workerParams.inputData.getString(DATA_TEXT) ?: return Result.failure()
     val channelId = workerParams.inputData.getString(DATA_CHANNEL_ID) ?: return Result.failure()
     val lastMessage = workerParams.inputData.getString(DATA_LAST_MESSAGE)
+    val ImageURLlist = workerParams.inputData.getStringArray(DATA_IMAGES)
 
     val messages: MutableList<GPTMessage> = mutableListOf()
     if (lastMessage != null) {
       messages.add(
         GPTMessage(
           role = "system",
-          content = lastMessage
+          content = listOf(
+            Content(
+              type = "text",
+              text = lastMessage
+            )
+          )
         )
       )
     }
-    messages.add(
-      GPTMessage(
-        role = "user",
-        content = text
+
+    if (ImageURLlist != null && ImageURLlist[0] != null) {
+      val imgUploadedList = mutableListOf<String>()
+      ImageURLlist.forEach {
+        val fileName = it.substringAfterLast("/")
+        val filePath = it
+        val url = "https://ibed.cws-aizc.online/api/1/upload"
+        val response = ClientUploadUtils().uploadImage(url, filePath, fileName)
+        val jo = JSONUtil.parseObj(response)
+        val fileInfo = JSONUtil.parseObj(jo.getStr("image")).getJSONObject("image")
+        imgUploadedList.add(fileInfo.getStr("url"))
+      }
+//      val imgBase64 = mutableListOf<String>()
+//      ImageURLlist.forEach {
+//        val file = File(it)
+//        val base64Str = Base64.encodeToString(file.readBytes(),Base64.URL_SAFE or Base64.NO_WRAP)
+//        // 获取文件后缀并替换url头
+//        val suffix = it.substringAfterLast(".")
+//        imgBase64.add("data:image/$suffix;base64,$base64Str")
+//      }
+      val contentList = mutableListOf<Content>().apply {
+        add(Content(type = "text", text = text))
+        imgUploadedList.forEach { url ->
+          add(Content(type = "image_url", imageUrl = ImageUrl(url,"low")))
+        }
+      }
+//      val contentList = mutableListOf(Content(type = "image_url", imageUrl = ImageUrl(resp,"low")))
+      messages.add(GPTMessage(role = "user", content = contentList))
+    } else {
+      messages.add(
+        GPTMessage(
+          role = "user",
+          content = listOf(
+            Content(
+              type = "text",
+              text = text
+          )
+          )
+        )
       )
-    )
+    }
 
     val request = GPTChatRequest(
       model = "gpt-4o-mini",
@@ -113,6 +158,7 @@ internal class ChatGPTMessageWorker @AssistedInject constructor(
 
   companion object {
     const val DATA_TEXT = "DATA_TEXT"
+    const val DATA_IMAGES = "DATA_IMAGES"
     const val DATA_CHANNEL_ID = "DATA_CHANNEL_ID"
     const val DATA_MESSAGE_ID = "DATA_PARENT_ID"
     const val DATA_LAST_MESSAGE = "DATA_LAST_MESSAGE"

@@ -131,6 +131,10 @@ dependencies {
 
   // baseline profile
   baselineProfile(project(":benchmark"))
+
+
+  implementation(libs.kotlin.stdlib)
+
 }
 
 if (file("google-services.json").exists()) {

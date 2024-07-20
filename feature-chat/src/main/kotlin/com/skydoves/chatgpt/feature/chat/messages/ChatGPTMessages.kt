@@ -18,6 +18,8 @@
 
 package com.skydoves.chatgpt.feature.chat.messages
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -67,6 +69,7 @@ import io.getstream.chat.android.compose.ui.components.messageoptions.defaultMes
 import io.getstream.chat.android.compose.ui.components.reactionpicker.ReactionsPicker
 import io.getstream.chat.android.compose.ui.components.selectedmessage.SelectedMessageMenu
 import io.getstream.chat.android.compose.ui.components.selectedmessage.SelectedReactionsMenu
+import io.getstream.chat.android.compose.ui.messages.attachments.AttachmentsPicker
 import io.getstream.chat.android.compose.ui.messages.composer.MessageComposer
 import io.getstream.chat.android.compose.ui.messages.header.MessageListHeader
 import io.getstream.chat.android.compose.ui.messages.list.MessageContainer
@@ -90,6 +93,10 @@ import io.getstream.chat.android.ui.common.state.messages.list.SelectedMessageOp
 import io.getstream.chat.android.ui.common.state.messages.list.SelectedMessageReactionsPickerState
 import io.getstream.chat.android.ui.common.state.messages.list.SelectedMessageReactionsState
 import io.getstream.chat.android.ui.common.state.messages.list.SelectedMessageState
+import android.util.Base64
+import java.io.ByteArrayOutputStream
+import java.io.File
+
 
 @Composable
 fun ChatGPTMessages(
@@ -119,6 +126,8 @@ fun ChatGPTMessages(
   val composerViewModel = viewModel(MessageComposerViewModel::class.java, factory = factory)
   val attachmentsPickerViewModel =
     viewModel(AttachmentsPickerViewModel::class.java, factory = factory)
+  // The state if we need to show the picker or not
+  val isShowingAttachments = attachmentsPickerViewModel.isShowingAttachments
 
   val backAction = {
     val isInThread = listViewModel.isInThread
@@ -182,10 +191,22 @@ fun ChatGPTMessages(
               .align(Alignment.Center),
             viewModel = composerViewModel,
             onSendMessage = {
-              viewModel.sendMessage(
-                text = it.text,
-                messagesItems = listViewModel.currentMessagesState.messageItems
-              )
+              if (it.attachments.isNotEmpty()){
+                val locations = it.attachments.map { attachment ->
+                  attachment.upload!!.path
+                }.toTypedArray()
+                viewModel.sendMessage(
+                  text = it.text,
+                  image_locations = locations as Array<String?>,
+                  messagesItems = listViewModel.currentMessagesState.messageItems
+                )
+              } else {
+                viewModel.sendMessage(
+                  text = it.text,
+                  image_locations = arrayOf(null),
+                  messagesItems = listViewModel.currentMessagesState.messageItems
+                )
+              }
               composerViewModel.sendMessage(it)
             },
             onAttachmentsClick = {
@@ -233,7 +254,8 @@ fun ChatGPTMessages(
                 message = messageState.message.copy(
                   user = messageState.message.user.copy(
                     id = chatGPTUser.id,
-                    name = chatGPTUser.name,
+//                    name = chatGPTUser.name,
+                    name = "Assistant",
                     image = chatGPTUser.image
                   )
                 ),
@@ -265,6 +287,25 @@ fun ChatGPTMessages(
       )
 
       MessageDialogs(listViewModel = listViewModel)
+
+      if (isShowingAttachments) {
+        AttachmentsPicker( // Add the picker to your UI
+          attachmentsPickerViewModel = attachmentsPickerViewModel,
+          modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .height(350.dp),
+          onAttachmentsSelected = { attachments ->
+            // Handle selected attachments
+            attachmentsPickerViewModel.changeAttachmentState(showAttachments = false)
+            composerViewModel.addSelectedAttachments(attachments)
+          },
+          onDismiss = {
+            // Handle dismiss
+            attachmentsPickerViewModel.changeAttachmentState(showAttachments = false)
+            attachmentsPickerViewModel.dismissAttachments()
+          }
+        )
+      }
     }
   }
 }
@@ -523,4 +564,12 @@ private fun HandleToastMessages(
       viewModel.sendStreamChatMessage("$error: ${context.getString(R.string.toast_error)}")
     }
   }
+}
+
+
+fun compressImage(file: File): ByteArray {
+  val bitmap = BitmapFactory.decodeFile(file.path)
+  val stream = ByteArrayOutputStream()
+  bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream)
+  return stream.toByteArray()
 }
