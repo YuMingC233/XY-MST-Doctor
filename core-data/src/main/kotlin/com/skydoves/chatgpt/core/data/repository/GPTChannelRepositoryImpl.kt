@@ -40,7 +40,7 @@ internal class GPTChannelRepositoryImpl @Inject constructor(
       channelType = "messaging",
       channelId = UUID.randomUUID().toString(),
       memberIds = listOf(userId, chatGPTUser.id),
-      extraData = mapOf("name" to "ChatGPT ${Random().nextInt(99999)}")
+      extraData = mapOf("name" to "Conversation ${Random().nextInt(99999)}")
     ).await()
   }
 

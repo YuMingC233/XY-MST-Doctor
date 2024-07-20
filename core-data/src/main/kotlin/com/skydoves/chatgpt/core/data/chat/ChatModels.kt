@@ -22,8 +22,7 @@ val chatGPTUser = User(
   id = "70ef052a-da88-4451-af92-99f7ed335a71",
   role = "user",
   name = "ChatGPT",
-  image = "https://user-images.githubusercontent.com/24237865/" +
-    "206655413-fb7c70f6-703e-476b-9ee9-861bfb8bf6f7.jpeg"
+  image = "https://ibed.cws-aizc.online/images/2024/07/20/AI-money.png"
 )
 
 const val commonChannelId: String = "messaging:4d7cd1e8-e6d6-4df3-bfad-babbb9411cce"
