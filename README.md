@@ -1,3 +1,21 @@
+# XY-MST-Doctors 基于ChatGPT Android项目实现的多模态医生助手
+
+### 名词解释
+
+- **XY：** 湖南湘雅医院的缩写 
+- **MST：**[多专家诊疗会诊模式](https://mp.weixin.qq.com/s?__biz=MzUyNDU0MjIxMA==&mid=2247483984&idx=1&sn=b360aaec17abbec02ccb388ef39d53df&chksm=fa2a8a3dcd5d032bc13adc69a68a0a389e71d091802db488abb9cf057dc404193b051faccb20&scene=21#wechat_redirect)（many specialists team），指在某一门诊开放时间段内，由多个专家坐诊，针对性探讨患者病情，回答疑问，明确诊断结果，制定治疗方案。该方式能**集思广益**，**尽快确诊**疑难病症，减少纰漏，规避风险，减轻患者痛苦、节约治疗费用。  
+原型为[MDT(a multi-disciplinary team meeting)](https://www.kgh.nhs.uk/multi-disciplinary-team-meeting/)
+
+- **ChatGPT：**[OpenAI的ChatGPT](https://chat.openai.com/chat)是一个基于大规模预训练的对话模型，能够生成自然流畅的对话，适用于多种对话场景。  
+
+### 说明
+
+在skydoves先生发布的 `1.1.0 Release` 版本的源代码基础上做出的实现，主要是为了实现一个多模态的医生助手，包括`文字、语音、图片`等多种输入方式。  
+
+目前已经基本实现了图片输入的功能，预期将会实现语音合成和转文字的功能。
+
+##### 以下为原Readme内容
+
 ![cover](https://user-images.githubusercontent.com/24237865/207994894-0cd5307b-f62e-4c38-be89-610a3ed459c0.jpg)
 
 <p align="center">
