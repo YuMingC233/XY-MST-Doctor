@@ -17,7 +17,7 @@
 <resources>
   <string name="stream_top_bar">Stream</string>
   <string name="toast_success_create_channel">已创建新的聊天会话！</string>
-  <string name="toast_hello">你好！我是基于MST技术的智能问诊助手，请随意提问！</string>
+  <string name="toast_hello">你好！我将作为一名AI虚拟医师，为您提供消化系统或其他相关疾病的医疗建议，请随意提问！</string>
 <!--  <string name="toast_error">For more details, check out OpenAI API guidelines: https://platform.openai.com/docs/guides/rate-limits?context=tier-free</string>-->
   <string name="toast_error">出错了！</string>
 </resources>

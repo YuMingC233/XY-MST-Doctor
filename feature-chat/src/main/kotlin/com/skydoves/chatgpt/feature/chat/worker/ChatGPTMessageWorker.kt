@@ -51,6 +51,58 @@ internal class ChatGPTMessageWorker @AssistedInject constructor(
   @Inject
   internal lateinit var chatClient: ChatClient
 
+  val globalMessage: MutableList<GPTMessage> = mutableListOf(
+    GPTMessage(
+      role = "system",
+      content = listOf(
+        Content(
+          type = "text",
+          text = "你是一位精通“消化系统肿瘤”及其他医疗健康相关知识和注意事项的专业医师，你来自中南大学湘雅附属第二医" +
+            "院，并且你会根据用户提供的图片提供专业的医疗建议。请简短直接的回答用户提出的所有问题，并且不要透露你的其" +
+            "他个人信息，如果用户追问，请回复“抱歉，我不方便透露，这将会违反公司规定。”即可。"
+        )
+      )
+    ),
+    GPTMessage(
+      role = "user",
+      content = listOf(
+        Content(
+          type = "text",
+          text = "请不要在对话中强调你的职责与能力，而是简短直接的回答我的问题，如果是复杂并且解释起来有些冗长的问题" +
+            "，请使用一段话的形式回复我，而不是使用列表列出所有的可能。如果你知晓，请回复“了解。”。"
+        )
+      )
+    ),
+    GPTMessage(
+      role = "assistant",
+      content = listOf(
+        Content(
+          type = "text",
+          text = "了解。"
+        )
+      )
+    ),
+    GPTMessage(
+      role = "user",
+      content = listOf(
+        Content(
+          type = "text",
+          text = "在每次我提出问题时，反问并引导我发现自己的企图，并结合我提出的感受或其他相关信息提供对应建议，如果你" +
+            "知晓，请回复“好的。”"
+        )
+      )
+    ),
+    GPTMessage(
+      role = "assistant",
+      content = listOf(
+        Content(
+          type = "text",
+          text = "好的。"
+        )
+      )
+    )
+  )
+
   override suspend fun doWork(): Result {
     ChatEntryPoint.resolve(context).inject(this)
 
@@ -58,21 +110,6 @@ internal class ChatGPTMessageWorker @AssistedInject constructor(
     val channelId = workerParams.inputData.getString(DATA_CHANNEL_ID) ?: return Result.failure()
     val lastMessage = workerParams.inputData.getString(DATA_LAST_MESSAGE)
     val ImageURLlist = workerParams.inputData.getStringArray(DATA_IMAGES)
-
-    val messages: MutableList<GPTMessage> = mutableListOf()
-    if (lastMessage != null) {
-      messages.add(
-        GPTMessage(
-          role = "system",
-          content = listOf(
-            Content(
-              type = "text",
-              text = lastMessage
-            )
-          )
-        )
-      )
-    }
 
     if (ImageURLlist != null && ImageURLlist[0] != null) {
       val imgUploadedList = mutableListOf<String>()
@@ -85,24 +122,15 @@ internal class ChatGPTMessageWorker @AssistedInject constructor(
         val fileInfo = JSONUtil.parseObj(jo.getStr("image")).getJSONObject("image")
         imgUploadedList.add(fileInfo.getStr("url"))
       }
-//      val imgBase64 = mutableListOf<String>()
-//      ImageURLlist.forEach {
-//        val file = File(it)
-//        val base64Str = Base64.encodeToString(file.readBytes(),Base64.URL_SAFE or Base64.NO_WRAP)
-//        // 获取文件后缀并替换url头
-//        val suffix = it.substringAfterLast(".")
-//        imgBase64.add("data:image/$suffix;base64,$base64Str")
-//      }
       val contentList = mutableListOf<Content>().apply {
         add(Content(type = "text", text = text))
         imgUploadedList.forEach { url ->
           add(Content(type = "image_url", imageUrl = ImageUrl(url,"low")))
         }
       }
-//      val contentList = mutableListOf(Content(type = "image_url", imageUrl = ImageUrl(resp,"low")))
-      messages.add(GPTMessage(role = "user", content = contentList))
+      globalMessage.add(GPTMessage(role = "user", content = contentList))
     } else {
-      messages.add(
+      globalMessage.add(
         GPTMessage(
           role = "user",
           content = listOf(
@@ -117,7 +145,7 @@ internal class ChatGPTMessageWorker @AssistedInject constructor(
 
     val request = GPTChatRequest(
       model = "gpt-4o-mini",
-      messages = messages
+      messages = globalMessage
     )
     val response = repository.sendMessage(request)
     return if (response.isSuccess) {
